@@ -20,17 +20,8 @@ types, (e.g.: check if to circles of given radius and positions intercept or
 not).
 '''
 
-from .base import *
 from .circle import *
 from .aabb import *
 from .line import *
 from .poly import *
 #from .SAT import *
-
-#
-# Late binding
-#
-ShapeAny._circle = Circle
-ShapeAny._mcircle = mCircle
-ShapeAny._aabb = AABB
-ShapeAny._maabb = mAABB

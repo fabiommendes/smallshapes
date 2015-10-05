@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+from __future__ import division
 from FGAme.mathutils import Vec2, mVec2, pi
 from FGAme.util import lazy
 from nose.tools import raises, assert_almost_equal, assert_almost_equals
@@ -105,9 +106,9 @@ class Immutable(object):
 
     def test_normalized(self):
         v = self.vector(1, 2)
-        n = v.normalized()
+        n = v.normalize()
 
-        assert_almost_equal(v.normalized().norm(), 1)
+        assert_almost_equal(v.normalize().norm(), 1)
         assert_almost_equals(n.x * v.x + n.y * v.y, v.norm())
 
     # Interface Python ########################################################

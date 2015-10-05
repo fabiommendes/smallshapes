@@ -1,52 +1,27 @@
 # -*- coding: utf8 -*-
 
+from __future__ import division
 from math import pi, sqrt
 from smallvectors import dot, Vec, Point
-from smallvectors.core import FlatView
-from smallshapes.base import ConvexAny, Convex, mConvex
-
+from smallshapes.base import Curve
 
 SQRT_HALF = 1 / sqrt(2)
 
-class CircleAny(ConvexAny):
 
-    '''Any class for Circle and mCircle classes'''
+class CircleBase(Curve):
+
+    '''Base class for Circle and mCircle classes'''
 
     __slots__ = ['_radius', '_x', '_y']
-    __flatview = FlatView
 
     def __init__(self, radius, pos=(0, 0)):
         self._radius = radius
         self._x, self._y = pos
 
-    #
-    # Abstract methods
-    #
-    def __len__(self):
-        return 2
-    
-    def __iter__(self):
-        yield self._radius
-        yield Vec(self._x, self._y)
-
     def __repr__(self):
-        fmt = type(self).__name__, self.radius, tuple(self.pos)
-        return '%s(%s, pos=%s)' % fmt
-    
-    def displaced_by_vector_to(self, vec):
-        return Circle(self.radius, self.pos + vec)
-    
-    @property
-    def flat(self):
-        return self.__flatview(self)
-
-    @property
-    def pos(self):
-        return Vec(self._x, self._y)
-
-    @property
-    def center(self):
-        return Point(self._x, self._y)
+        s_center = '%.1f, %.1f' % tuple(self.center)
+        tname = type(self).__name__
+        return '%s(%.1f, (%s))' % (tname, self._radius, s_center)
 
     @property
     def x(self):
@@ -55,6 +30,14 @@ class CircleAny(ConvexAny):
     @property
     def y(self):
         return self._y
+
+    @property
+    def pos(self):
+        return Vec(self._x, self._y)
+
+    @property
+    def center(self):
+        return Point(self._x, self._y)
 
     def area(self):
         return pi * self._radius * self._radius
@@ -107,15 +90,9 @@ class CircleAny(ConvexAny):
         return self._pos.distance(point) <= self._radius
 
 
-class Circle(CircleAny, Convex):
+class Circle(CircleBase):
 
-    '''Representa um círculo imutável.
-    
-    Examples
-    --------
-    
-    >>> c1 = Circle(5)
-    '''
+    '''Representa um círculo imutável.'''
 
     __slots__ = []
 
@@ -124,21 +101,12 @@ class Circle(CircleAny, Convex):
         return self._radius
 
 
-class mCircle(CircleAny, mConvex):
+class mCircle(CircleBase):
 
     '''A mutable circle class'''
 
     __slots__ = []
-    def __setitem_simple__(self, key, value):
-        if key == 0:
-            self._radius = value
-        elif key == 1:
-            self._x = value 
-        elif key == 2:
-            self._y = value
-        else:
-            raise IndexError(key)
-            
+
     @Circle.radius.setter
     def radius(self, value):
         self._radius = float(value)
@@ -147,9 +115,9 @@ class mCircle(CircleAny, mConvex):
     def pos(self, value):
         self._x, self._y = value
 
+# Late binding
+Curve._Circle = CircleBase
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
-
-    Circle(1, (1, 2))
-    mCircle(2, (1, 2))

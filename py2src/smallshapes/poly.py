@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+from __future__ import division
 from smallvectors import Vec, Point, VecArray, dot
 from smallshapes import aabb_bbox
 from math import sqrt, pi, sin
