@@ -1,9 +1,7 @@
-# -*- coding: utf8 -*-
-
 from math import sqrt
 from smallvectors import dot, Vec
-from smallvectors.core import SimpleFlatView
-from smallshapes.base import ConvexAny, Convex, mConvex
+from smallvectors.core import FlatView
+from smallshapes.base import Convex, Mutable, Immutable
 from smallshapes.circle import Circle
 
 __all__ = ['AABB', 'mAABB',
@@ -14,7 +12,7 @@ direction_x = Vec(1, 0)
 direction_y = Vec(0, 1)
 
 
-class AABBAny(ConvexAny):
+class AABBAny(Convex):
 
     '''Classe pai para AABB e mAABB'''
 
@@ -31,10 +29,6 @@ class AABBAny(ConvexAny):
                 float, aabb_bbox(xmin, xmax, ymin, ymax, bbox, rect, shape, pos)
             )
 
-    @property
-    def flat(self):
-        return SimpleFlatView(self)
-        
     @classmethod
     def _constructor(cls, xmin, xmax, ymin, ymax):
         new = AABB.__new__(cls)
@@ -45,6 +39,27 @@ class AABBAny(ConvexAny):
         assert xmin <= xmax
         assert ymin <= ymax
         return new
+
+    def __flatgetitem__(self, key):
+        if key == 0:
+            return self.xmin
+        elif key == 1:
+            return self.xmax 
+        elif key == 2:
+            return self.ymin
+        elif key == 3:
+            return self.ymax
+        else:
+            raise IndexError(key)
+
+    def __flatlen__(self):
+        return 4
+
+    def __flatiter__(self):
+        yield self.xmin
+        yield self.xmax
+        yield self.ymin
+        yield self.ymax
 
     @property
     def bbox(self):
@@ -68,22 +83,6 @@ class AABBAny(ConvexAny):
         return Vec(x, y)
 
     @property
-    def pos_sw(self):
-        return Vec(self.xmin, self.ymin)
-
-    @property
-    def pos_se(self):
-        return Vec(self.xmax, self.ymin)
-
-    @property
-    def pos_nw(self):
-        return Vec(self.xmin, self.ymax)
-
-    @property
-    def pos_ne(self):
-        return Vec(self.xmax, self.ymax)
-
-    @property
     def width(self):
         return self.xmax - self.xmin
 
@@ -97,17 +96,17 @@ class AABBAny(ConvexAny):
                 Vec(self.xmax, self.ymax), Vec(self.xmin, self.ymax))
 
     @property
-    def radius_cbb(self):
+    def cbb_radius(self):
         return sqrt(
             (self.xmax - self.xmin) ** 2 + (self.ymax - self.ymin) ** 2) / 2
 
     @property
     def aabb(self):
-        return self
+        return self.immutable()
 
     @property
     def cbb(self):
-        return Circle(self.radius_cbb, self.pos)
+        return Circle(self.cbb_radius, self.pos)
 
     #
     # Magic methods
@@ -217,7 +216,7 @@ class AABBAny(ConvexAny):
         return (self.ymin, self.ymax)
 
 
-class AABB(AABBAny, Convex):
+class AABB(AABBAny, Immutable):
 
     '''Representa uma caixa de contorno retangular alinhada aos eixos.
 
@@ -264,7 +263,7 @@ class AABB(AABBAny, Convex):
     __slots__ = ()
     
     
-class mAABB(AABBAny, mConvex):
+class mAABB(AABBAny, Mutable):
 
     '''Mutable version of AABB'''
     
@@ -294,7 +293,11 @@ class mAABB(AABBAny, mConvex):
 
     @AABBAny.pos.setter
     def pos(self, value):
-        self.displaced(value - self.pos)
+        x, y = value - self.pos
+        self.xmin += x
+        self.xmax += x
+        self.ymin += y
+        self.ymax += y
 
     def rotate(self, *args):
         try:
@@ -304,9 +307,9 @@ class mAABB(AABBAny, mConvex):
             traceback.print_exc(limit=2)
             print('-' * 80)
 
-###############################################################################
+#
 # Extrai caixas de contorno a partir das entradas
-###############################################################################
+#
 def aabb_bbox(xmin=None, xmax=None,
               ymin=None, ymax=None,
               bbox=None, rect=None,

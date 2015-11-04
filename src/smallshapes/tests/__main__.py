@@ -2,6 +2,8 @@
 Loads all tests in package and run
 '''
 
+import doctest
+import sys
 from smallshapes.tests import *  # @UnusedWildImport
 import smallshapes as mod_current
 
@@ -9,8 +11,6 @@ try:
     from unittest2 import main
 except ImportError:
     from unittest import main
-import doctest
-import sys
 
 
 def load_tests(loader, tests, ignore):

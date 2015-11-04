@@ -1,13 +1,14 @@
 '''
 Base classes for smallshapes objects
 '''
-
+import sys
 import functools
 from abc import abstractmethod, abstractproperty, ABCMeta
-from smallvectors import Vec, asvector, aspoint, asdirection
-from smallvectors.core import Flat, mFlat, FlatView
+from smallvectors import Vec, asvector, asdirection
+from smallvectors.core import FlatView, Mutable, Immutable
+from smallshapes.interfaces import HasAABB
 
-def args_or_vec_method(func):
+def args2vec(func):
     '''Decorator that transforms a method that only accept vector inputs to
     a function that accepts both coordinates or vectors'''
     
@@ -19,8 +20,8 @@ def args_or_vec_method(func):
             return func(self, asvector(args))
         
     return decorated
-    
-class SerializableAny(metaclass=ABCMeta):
+
+class Serializable(metaclass=ABCMeta):
     '''Serializable objects exihibit a `flat` iterable object that can traverse
     the scalar contents of the object in a serial fashion.
     
@@ -32,6 +33,15 @@ class SerializableAny(metaclass=ABCMeta):
     __slots__ = ()
 
     _newflat = None
+    
+    @property
+    def _basetype_(self):
+        for T in type(self).mro()[1:]:
+            if not isinstance(T, Mutable) and not isinstance(T, Immutable):
+                setattr(type(self), '_basetype_', T)
+                return T
+        raise TypeError 
+            
     
     def __init__(self, *args):
         self.flat = self._newflat(self._flat_from_args(args))
@@ -63,19 +73,26 @@ class SerializableAny(metaclass=ABCMeta):
         return iter(self.flat)
 
     def __repr__(self):
-        args = ', '.join(map(str, self))
+        args = ((tuple(x) if isinstance(x, Vec) else x) for x in self)
+        args = ', '.join(map(str, args))
         return '%s(%s)' % (type(self).__name__, args)
     
     def __eq__(self, other):
-        if (isinstance(other, type(self)) or 
-                isinstance(self, type(other)) or
-                not isinstance(other, Locatable)):
-            return all(x == y for (x, y) in zip(self, other))
-        else:
+        try:
+            can_be_equal = all(x == y for (x, y) in zip(self, other))
+        except TypeError:
             return False
+        
+        if can_be_equal:
+            try:
+                if isinstance(other, self.__anytype__):
+                    return True
+            except AttributeError:
+                return False
+        return False
 
     @classmethod
-    def from_flat(cls, data, copy=True):
+    def fromflat(cls, data, copy=True):
         cls.__getflat__(data)
         new = object.__new__(cls)
         new.flat = new._newflat(data, copy)
@@ -99,19 +116,6 @@ class SerializableAny(metaclass=ABCMeta):
         
         return FlatView(self)
 
-class Serializable(SerializableAny):
-    '''An immutable serializable object'''
-    
-    _newflat = Flat
-
-
-class mSerializable(SerializableAny):
-    '''A mutable serializable object'''
-    
-    _newflat = mFlat
-        
-        
-        
 class SmallShapeBase(Serializable):
     '''Base class for all gemetric objects in the smallshapes package.
     
@@ -121,12 +125,41 @@ class SmallShapeBase(Serializable):
 
     __slots__ = ()
     
-
+    @property
+    def __anytype__(self):
+        cls = type(self)
+        for T in cls.mro():
+            if not issubclass(T, (Mutable, Immutable)):
+                setattr(cls, '__anytype__', T)
+                return T
+        raise AttributeError 
     
-#
-# Locatable base classes
-#
-class LocatableAny(SmallShapeBase):
+    
+    # Self-changing properties that find the corresponding mutable and 
+    # immutable types
+    __mutabletype__ = None
+    __immutabletype__ = None
+    
+    # Self-changing properties that hold base types for smallshapes types
+    def __autoproperty(name):  # @NoSelf
+        @property
+        def autoprop(self):
+            import smallshapes
+            
+            cls = getattr(smallshapes, name)
+            attr = '__%s_t__' % name.lower()
+            setattr(type(self), attr, cls)
+            return cls
+        
+        return autoprop
+        
+    __aabb_t__ = __autoproperty('AABB')
+    __circle_t__ = __autoproperty('Circle')
+    __segment_t__ = __autoproperty('Segment')
+    __poly_t__ = __autoproperty('Poly')
+    
+    
+class Locatable(SmallShapeBase):
     '''
     Base class for all geometric objects that have a location in space.
     
@@ -144,12 +177,36 @@ class LocatableAny(SmallShapeBase):
     
     __slots__ = ()
     
+    def __setitem__(self, key, value):
+        N = len(self)
+        if isinstance(key, int):
+            if key > N:
+                raise IndexError(key)
+            elif key >= 0:
+                self.__setitem_simple__(key, value)
+            elif key < 0:
+                self.__setitem_simple__(N - key, value)
+        elif isinstance(key, slice):
+            indexes = range(*slice)
+            if indexes[-1] > len(self):
+                raise IndexError
+            else:
+                setindex = self.__setitem_simple__
+                values = [value[i] for i in indexes]
+                for i,v in zip(indexes, values):
+                    setindex(i, v)
+        else:
+            raise TypeError('invalid index: %r' % key)
+        
+    def __setitem_simple__(self, key, value):
+        raise NotImplementedError
+
     def moved(self, *args):
         '''Alias to obj.displaced()'''
         
         return self.displaced(*args)
     
-    @args_or_vec_method
+    @args2vec
     def displaced(self, vec):
         '''Return a copy of itself displaced by the given vector or 
         coordinates'''
@@ -159,9 +216,9 @@ class LocatableAny(SmallShapeBase):
     def displaced_by_vector(self, vector):
         '''Like obj.displaced(vec), but expects a vector input'''
 
-        self.displaced_by_vector_to(vector + self.pos)
+        return self.displaced_by_vector_to(vector + self.pos)
 
-    @args_or_vec_method
+    @args2vec
     def displaced_to(self, vec):
         '''Return a copy of itself displaced to reach the given final 
         position'''
@@ -190,55 +247,12 @@ class LocatableAny(SmallShapeBase):
         
         return aspoint(self.pos)
     
-
-class Locatable(LocatableAny):
-    '''Base class for immutable geometric types'''
-    
-    __slots__ = ()
-    
-    def __hash__(self):
-        return hash(tuple(self))
-
-    def copy(self):
-        '''Return a copy of itself'''
-        
-        return self
-    
-class mLocatable(LocatableAny):
-    '''Base class for mutable geometric types'''
-    
-    __slots__ = ()
-    
-    def __setitem__(self, key, value):
-        N = len(self)
-        if isinstance(key, int):
-            if key > N:
-                raise IndexError(key)
-            elif key >= 0:
-                self.__setitem_simple__(key, value)
-            elif key < 0:
-                self.__setitem_simple__(N - key, value)
-        elif isinstance(key, slice):
-            indexes = range(*slice)
-            if indexes[-1] > len(self):
-                raise IndexError
-            else:
-                setindex = self.__setitem_simple__
-                values = [value[i] for i in indexes]
-                for i,v in zip(indexes, values):
-                    setindex(i, v)
-        else:
-            raise TypeError('invalid index: %r' % key)
-        
-    def __setitem_simple__(self, key, value):
-        raise NotImplementedError
-    
     def move(self, *args):
         '''Alias to obj.displace(*args)'''
         
         self.displace(*args)
         
-    @args_or_vec_method
+    @args2vec
     def setpos(self, vec):
         '''Set the center of object position *INPLACE*'''
         
@@ -249,7 +263,7 @@ class mLocatable(LocatableAny):
         
         self.pos = vec
         
-    @args_or_vec_method
+    @args2vec
     def displace(self, vec):
         '''Change object position *INPLACE*'''
         
@@ -257,12 +271,14 @@ class mLocatable(LocatableAny):
         
     def copy(self):
         '''Return a copy of itself''' 
-        
-        return type(self)(*iter(self))
-#
-# Curves
-#
-class ShapeAny(LocatableAny):
+
+        if isinstance(self, Immutable):
+            return self
+        else:        
+            return type(self)(*iter(self))
+
+
+class Shape(Locatable, HasAABB):
 
     '''Base class for all objects that have a definite shape.
     
@@ -275,7 +291,6 @@ class ShapeAny(LocatableAny):
     _Circle = None
     _Segment = None
     _asvector = staticmethod(asvector)
-    _aspoint = staticmethod(aspoint)
     _asdirection = staticmethod(asdirection)
 
     def rotated(self, rotation):
@@ -337,20 +352,8 @@ class ShapeAny(LocatableAny):
             t2 = type(other).__name__
             raise TypeError('invalid distance test: %s vs %s' % (t1, t2))
 
-class Shape(ShapeAny, Locatable):
-    '''Immutable shape object'''
-    
-    __slots__ = ()
-    
-class mShape(ShapeAny, mLocatable):
-    '''A muttable shape object'''
 
-    __slots__ = ()
-
-#
-# Solid shapes
-#
-class SolidAny(ShapeAny):
+class Solid(Shape):
 
     '''Base class for all closed shape objects'''
 
@@ -381,42 +384,17 @@ class SolidAny(ShapeAny):
             t2 = type(other).__name__
             raise TypeError('invalid containement test: %s vs %s' % (t1, t2))
 
-class Solid(SolidAny, Shape):
-    '''Immutable solid shapes'''
-    
-    __slots__ = ()
-
-class mSolid(SolidAny, mShape):
-    '''Muttable solid shapes'''
-
-    __slots__ = ()
-    
-    
-#
-# Convex shapes
-#
-class ConvexAny(SolidAny):
+class Convex(Solid):
 
     '''Base class for all convex shapes'''
     
     __slots__ = ()
 
-    # Generic containement FGAme_tests implementations that are valid for all
-    # convex shapes
     def contains_segment(self, segment):
         pt_test = self.contains_point
         pt1, pt2 = segment
         return pt_test(pt1) and pt_test(pt2)
 
-class Convex(ConvexAny, Solid):
-    '''Immutable convex shapes'''
-    
-    __slots__ = ()
-    
-class mConvex(ConvexAny, mSolid):
-    '''Mutable convex shapes''' 
-    
-    __slots__ = ()
 
 if __name__ == '__main__':
     import doctest

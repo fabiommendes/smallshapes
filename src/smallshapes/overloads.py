@@ -4,8 +4,8 @@ Created on 30/06/2015
 @author: chips
 '''
 
+from generic import generic
 from mathtools.shapes import *
-from Fatou import generic
 inf = float('inf')
 
 #

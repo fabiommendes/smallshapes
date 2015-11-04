@@ -1,4 +1,3 @@
-# -*- coding: utf8 -*-
 '''
 ====================
 Line-like primitives
@@ -12,24 +11,25 @@ A module for all line-like primitives::
     - **Line:** an infinite line defined by two points
 '''
 
-from smallvectors import dot, asvector, asdirection, Point, Vec
-from smallshapes.base import ShapeAny, Shape, mShape
+from smallvectors import dot, asvector, asdirection, Vec
+from smallshapes.base import Shape, Mutable, Immutable
 
 Inf = float('inf')
 
 
-###############################################################################
-# Segment -- a finite line segment
-###############################################################################
-class SegmentAny(ShapeAny):
-
-    '''Any class for Segment and mSegment'''
-
-    __slots__ = ['_start', '_end']
+class SegmentAny(Shape):
+    __slots__ = ('_start', '_end')
 
     def __init__(self, start, end):
         self._start = asvector(start)
         self._end = asvector(end)
+
+    def __iter__(self):
+        yield self._start
+        yield self._end
+
+    def __len__(self):
+        return 2
 
     @property
     def start(self):
@@ -44,19 +44,31 @@ class SegmentAny(ShapeAny):
         return (self._start + self._end) / 2
     
     @property
+    def xmin(self):
+        return min(self._start.x, self._end.x)
+    
+    @property
+    def xmax(self):
+        return max(self._start.x, self._end.x)
+    
+    @property
+    def ymin(self):
+        return min(self._start.y, self._end.y)
+    
+    @property
+    def ymax(self):
+        return max(self._start.y, self._end.y)
+    
+    @property
     def direction(self):
         return self.end - self.start
     
-    def __iter__(self):
-        yield self._start
-        yield self._end
-
     def displaced_by_vector_to(self, pos):
         u, v = self
         delta = pos - (u + v) / 2
         return type(self)(u + delta, v + delta)
 
-class Segment(SegmentAny, Shape):
+class Segment(SegmentAny, Immutable):
 
     '''Represents a directed line segment from `start` point to `end` point.
     
@@ -64,11 +76,11 @@ class Segment(SegmentAny, Shape):
     
     >>> obj = Segment((-1, 1), (1, 1))
     >>> obj.direction
-    Vec[2, int](2, 0)
+    Vec(2, 0)
     '''
 
 
-class mSegment(SegmentAny, mShape):
+class mSegment(SegmentAny, Mutable):
 
     '''A mutable version of Segment'''
 
@@ -84,8 +96,15 @@ class mSegment(SegmentAny, mShape):
     def direction(self, value):
         self.end = self.start + self._asvector(value)
 
+    @SegmentAny.pos.setter
+    def pos(self, value):
+        start, end = self
+        pos = (start + end) / 2
+        delta = value - pos
+        self._start += delta
+        self._end += delta
 
-class LineOrRayBase(ShapeAny):
+class LineOrRayBase(Shape):
     '''Common functionality to Line and Ray objects'''
     
     __slots__ = ('pos', 'tangent')
@@ -101,6 +120,9 @@ class LineOrRayBase(ShapeAny):
     def __flatiter__(self):
         yield from self.start
         yield from self.tangent
+
+    def __len__(self):
+        return 2
 
     @property
     def start(self):
@@ -118,23 +140,23 @@ class LineOrRayBase(ShapeAny):
         return type(self)(pos, self.direction)
 
 
-class LineOrRay(LineOrRayBase, Shape):
+class LineOrRay(LineOrRayBase, Immutable):
     '''Immutable Line or Ray'''
 
     __slots__ = ()
     
-class mLineOrRay(LineOrRayBase, mShape):
+class mLineOrRay(LineOrRayBase, Mutable):
     '''Mutable Line or Ray'''    
 
     __slots__ = ()
 
-class RayAny(ShapeAny):
+class RayAny(Shape):
 
     '''Any class for Ray and mRay'''
 
     __slots__ = ()
     
-class Ray(RayAny, LineOrRay):
+class Ray(RayAny, Immutable):
 
     '''A directed line that is infinite in one direction.
     
@@ -146,12 +168,12 @@ class Ray(RayAny, LineOrRay):
     
     >>> ray = Ray((0, 0), (1, 1))
     >>> ray.tangent
-    Direction[2, int](1, 1)
+    Direction(1, 1)
     '''
     
     __slots__ = ()
 
-class mRay(RayAny, mLineOrRay):
+class mRay(RayAny, Mutable):
 
     '''A mutable Ray'''
 
@@ -180,7 +202,7 @@ class LineAny(LineOrRayBase):
             return [-Inf, Inf]
 
 
-class Line(LineAny, Shape):
+class Line(LineAny, Immutable):
 
     '''A infinite line that passes in point p0 and has an unity direction;
     
@@ -192,7 +214,7 @@ class Line(LineAny, Shape):
     __slots__ = ()
 
 
-class mLine(LineAny, mShape):
+class mLine(LineAny, Mutable):
 
     '''A mutable Line'''
 
@@ -202,12 +224,12 @@ class mLine(LineAny, mShape):
 ###############################################################################
 # Path -- a sequence of points
 ###############################################################################
-class PathAny(ShapeAny):
+class PathAny(Shape):
 
     '''Any class for Path and mPath'''
 
     def __init__(self, points):
-        self._points = list(Point(*pt) for pt in points)
+        self._points = list(Vec(*pt) for pt in points)
 
     def __iter__(self):
         return iter(self._points)
@@ -249,17 +271,17 @@ class PathAny(ShapeAny):
         L.append(L[0])
         return L
 
-class Path(PathAny, Shape):
+class Path(PathAny, Immutable):
 
     '''A path represented by a sequence of points
     
     >>> path = Path([(0, 0), (1, 1), (2, 0)])
     >>> path.pos
-    Vec[2, float](1.0, 0.29289321881345254)
+    Vec(1.0, 0.29289321881345254)
     '''
     
 
-class mPath(PathAny, mShape):
+class mPath(PathAny, Mutable):
 
     '''A mutable Path'''
     

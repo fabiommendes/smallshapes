@@ -1,18 +1,98 @@
-# -*- coding: utf8 -*-
-
-from smallvectors import Vec, Point, VecArray, dot
+from smallvectors import Vec, VecArray, dot
 from smallshapes import aabb_bbox
+from smallshapes.base import Mutable, Immutable, Shape, Solid, Convex 
 from math import sqrt, pi, sin
 
+Vec = Vec[2, float]
 
-###############################################################################
-# Generic polygons
-###############################################################################
-class CircuitBase(VecArray):
+__all__ = [
+    'Path', 'mPath', 'PathAny',
+    'Circuit', 'mCircuit', 'CircuitAny',
+    'Poly', 'mPoly', 'PolyAny',
+    'ConvexPoly', 'mConvexPoly', 'ConvexPolyAny',
+    'RegularPoly', 'mRegularPoly', 'RegularPolyAny',
+    'Rectangle', 'mRectangle', 'RectangleAny',
+    'Triangle', 'mTriangle', 'TriangleAny',
+    
+    # Functions
+    'convex_hull', 'clip', 'area', 'center_of_mass', 'ROG_sqr',
+]
 
-    '''Base class for Circuit and mCircuit'''
+class PathAny(Shape):
 
-    __slots__ = ['vertices']
+    '''Base class for Path and mPath'''
+
+    __slots__ = ('_data',)
+
+    def __init__(self, *data):
+        if len(data) == 1:
+            data = data[0]
+        self._data = [x + 0.0 for vec in data for x in vec ]
+
+    def __iter__(self):
+        numbers = iter(self._data)
+        vec = Vec
+        for x in numbers:
+            yield vec(x, next(numbers))
+    
+    def __len__(self):
+        return len(self._data) // 2
+    
+    def __getitem__(self, idx):
+        N = len(self._data) // 2
+        if idx < -N or idx >= N:
+            raise IndexError(idx)
+        elif idx < 0:
+            idx = N + idx
+        i = 2 * idx
+        return Vec(*self._data[i:i+2])
+    
+    def __flatiter__(self):
+        return iter(self._data)
+            
+    def __flatlen__(self):
+        return len(self._data)
+
+    @property
+    def pos(self):
+        pt0 = self[-1]
+        M, S = 0, Vec(0, 0)
+        
+        for pt in self:
+            L = (pt - pt0).norm()
+            M += L
+            S += (pt + pt0) * (L / 2)
+            pt0 = pt
+        return S / M
+    
+    @pos.setter
+    def pos(self, value):
+        if isinstance(self, Immutable):
+            raise AttributeError("can't set attribute of immutable object: pos")
+        
+        data = self._data
+        dx, dy = value - self.pos
+        for i in range(0, len(self._data), 2):
+            data[i] += dx
+            data[i + 1] += dy
+    
+    @property
+    def aabb(self):
+        X = self._data[::2]
+        Y = self._data[1::2]
+        return self.__aabb_t__(min(X), max(X), min(Y), max(Y))
+
+    def displaced_by_vector_to(self, value):
+        return self.displaced_by_vector_to(value - self.pos)
+    
+    def displaced_by_vector(self, value):
+        new = object.__new__(self.__class__)
+        data = new._data = self._data[:]
+        dx, dy = value
+        for i in range(0, len(self._data), 2):
+            data[i] += dx
+            data[i + 1] += dy
+        return new
 
     def iter_closing(self):
         '''Itera sobre os pontos do objeto repetindo o primeiro ao final'''
@@ -27,7 +107,6 @@ class CircuitBase(VecArray):
 
         return self._data[i % len(self._data)]
 
-    # Métodos utilizado pelo SAT ##############################################
     def directions(self, n):
         '''Retorna a lista de direções exaustivas para o teste do SAT
         associadas ao objeto.'''
@@ -48,7 +127,6 @@ class CircuitBase(VecArray):
         center_pos = dot(self.pos, n)
         return (center_pos - r, center_pos + r)
 
-    # Propriedades do polígono ################################################
     def is_simple(self):
         pass
 
@@ -84,68 +162,94 @@ class CircuitBase(VecArray):
         return ROG_sqr(self, axis)
 
 
-class Circuit(CircuitBase):
+class Path(PathAny, Immutable):
 
-    '''Circuit is a closed path with a well defined inside.
+    '''Path instances represent an open path in space.'''
+    
+    __slots__ = ()
+    
 
-    Differently from polygons, circuits allows for lines crossing each other'''
+class mPath(PathAny, Mutable):
 
+    '''A mutable path'''
+    
+    __slots__ = ()
+    
+    
+class CircuitAny(PathAny, Solid):
+    '''Base class for Circuit and mCircuit'''
+    
+    __slots__ = ()
 
-class mCircuit(CircuitBase):
+    @property
+    def pos(self):
+        # position is the center of mass along area
+        return center_of_mass(self)
+    
+    pos = pos.setter(PathAny.pos.fset)
+    
+    
+class Circuit(CircuitAny, Immutable):
+    '''Circuit represents a closed path in space.
+    
+    Differently from polygons, paths can cross each other'''
+    
+    __slots__ = ()
+    
+    
+class mCircuit(CircuitAny, Mutable):
+    '''A mutable circuit'''
+    
+    __slots__ = ()
+    
 
-    '''A mutable polygon'''
-
-
-###############################################################################
-# Simple polygons
-###############################################################################
-class PolyBase(CircuitBase):
+class PolyAny(CircuitAny, Solid):
 
     '''Base class for Poly and mPoly'''
-    __slots__ = []
+    
+    __slots__ = ()
 
     def is_simple(self):
         True
 
 
-class Poly(PolyBase, Circuit):
+class Poly(PolyAny, Immutable):
 
     '''Generic polygon class.
 
     The sides of a simple polygon never cross each other'''
 
+    __slots__ = ()
 
-class mPoly(PolyBase, mCircuit):
+
+class mPoly(PolyAny, Mutable):
 
     '''A mutable simple polygon'''
+    
+    __slots__ = ()
+    
 
-
-###############################################################################
-# Convex polygons
-###############################################################################
-class ConvexPolyBase(PolyBase):
+class ConvexPolyAny(PolyAny, Convex):
 
     '''Base class for ConvexPoly and mConvexPoly'''
-    __slots__ = []
+    
+    __slots__ = ()
 
     def is_convex(self):
         True
 
 
-class ConvexPoly(ConvexPolyBase, Poly):
+class ConvexPoly(ConvexPolyAny, Immutable):
 
     '''A convex polygon'''
 
 
-class mConvexPoly(ConvexPolyBase, mPoly):
+class mConvexPoly(ConvexPolyAny, Mutable):
 
     '''A mutable convex polygon'''
 
 
-###############################################################################
-# Regular polygons
-###############################################################################
-class RegularPolyBase(ConvexPolyBase):
+class RegularPolyAny(ConvexPolyAny):
 
     '''Base class for RegularPoly and mRegularPoly'''
 
@@ -159,7 +263,7 @@ class RegularPolyBase(ConvexPolyBase):
         for _ in range(N):
             vertices.append(p)
             p = R * p
-        super(RegularPolyBase, self).__init__(vertices)
+        super(RegularPolyAny, self).__init__(vertices)
 
         # Altera posição e ângulo
         if pos is not None:
@@ -168,12 +272,12 @@ class RegularPolyBase(ConvexPolyBase):
             self.rotate(theta)
 
 
-class RegularPoly(RegularPolyBase, ConvexPoly):
+class RegularPoly(RegularPolyAny, Immutable):
 
     '''A regular polygon with N sides'''
 
 
-class mRegularPoly(RegularPolyBase, mConvexPoly):
+class mRegularPoly(RegularPolyAny, Mutable):
 
     '''A mutable regular polygon'''
 
@@ -181,23 +285,23 @@ class mRegularPoly(RegularPolyBase, mConvexPoly):
 ###############################################################################
 # Specific geometric shapes
 ###############################################################################
-class TriangleBase(ConvexPolyBase):
+class TriangleAny(ConvexPolyAny):
 
     '''Base class for Triangle and mTriangle'''
     __slots__ = []
 
 
-class Triangle(TriangleBase, ConvexPoly):
+class Triangle(TriangleAny, Immutable):
 
     '''A generic triangle'''
 
 
-class mTriangle(TriangleBase, mConvexPoly):
+class mTriangle(TriangleAny, Mutable):
 
     '''A mutable triangle'''
 
 
-class RectangleBase(ConvexPolyBase):
+class RectangleAny(ConvexPolyAny):
 
     '''Base class for Rectangle and mRectangle'''
 
@@ -206,17 +310,17 @@ class RectangleBase(ConvexPolyBase):
         self.theta = 0.0
         xmin, xmax, ymin, ymax = aabb_bbox(*args, **kwds)
         vertices = [(xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]
-        super(RectangleBase, self).__init__(vertices)
+        super().__init__(vertices)
         if theta:
             self.rotate(theta)
 
 
-class Rectangle(RectangleBase, ConvexPoly):
+class Rectangle(RectangleAny, Immutable):
 
     '''A rectangle'''
 
 
-class mRectangle(RectangleBase, mConvexPoly):
+class mRectangle(RectangleAny, Mutable):
 
     '''A mutable rectangle'''
 
@@ -257,7 +361,7 @@ def center_of_mass(L):
 
     >>> pontos = [(0, 0), (1, 0), (1, 1), (0, 1)]
     >>> center_of_mass(pontos)
-    Vec[2, float](0.5, 0.5)
+    Vec(0.5, 0.5)
     '''
 
     W = _w_list(L)
@@ -330,7 +434,7 @@ def clip(poly1, poly2):
 
     def intercept_point():
         '''Retorna o ponto de intercepção entre os segmentos formados por
-        r1-r0 e v1-v0'''
+        ``r1 - r0`` e ``v1 - v0``'''
 
         A = r0.x * r1.y - r0.y * r1.x
         B = v0.x * v1.y - v0.y * v1.x
@@ -418,3 +522,9 @@ def convex_hull(points):
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+
+    p = mConvexPoly([(0, 0), (1, 0), (0, 1)])
+    print(p)
+    print(p.pos)
+    p.pos = (0, 0)
+    print(p.pos)

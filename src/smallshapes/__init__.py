@@ -30,7 +30,7 @@ from .poly import *
 #
 # Late binding
 #
-ShapeAny._circle = Circle
-ShapeAny._mcircle = mCircle
-ShapeAny._aabb = AABB
-ShapeAny._maabb = mAABB
+Shape._circle = Circle
+Shape._mcircle = mCircle
+Shape._aabb = AABB
+Shape._maabb = mAABB
