@@ -110,7 +110,7 @@ class CircleAny(Convex):
         return []
 
     def shadow(self, n):
-        p0 = dot(self._pos, n)
+        p0 = dot(self.pos, n)
         r = self._radius
         return (p0 - r, p0 + r)
 

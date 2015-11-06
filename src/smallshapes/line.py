@@ -140,22 +140,13 @@ class LineOrRayBase(Shape):
         return type(self)(pos, self.direction)
 
 
-class LineOrRay(LineOrRayBase, Immutable):
-    '''Immutable Line or Ray'''
-
-    __slots__ = ()
-    
-class mLineOrRay(LineOrRayBase, Mutable):
-    '''Mutable Line or Ray'''    
-
-    __slots__ = ()
-
-class RayAny(Shape):
+class RayAny(LineOrRayBase):
 
     '''Any class for Ray and mRay'''
 
     __slots__ = ()
     
+
 class Ray(RayAny, Immutable):
 
     '''A directed line that is infinite in one direction.

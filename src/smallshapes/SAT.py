@@ -2,25 +2,20 @@
 Implementa o separating axis theorem (sat) para detecção de colisão entre as
 formas de colisão básicas.
 '''
-from FGAme.util.multidispatch import multifunction
-from mathtools import Vec2
-from mathtools.shapes import Circle, AABB
+from generic import generic
+from smallvectors import Vec
+from smallshapes import Circle, AABB
 
-e1 = Vec2(1, 0)
-e2 = Vec2(0, 1)
-
-
-###############################################################################
-#                         Cálculo de sombras
-###############################################################################
+e1 = Vec(1, 0)
+e2 = Vec(0, 1)
 
 
-@multifunction(None, None)
+@generic
 def shadow(A, normal):
     return A.shadow(normal)
 
 
-@multifunction(AABB, None)
+@shadow.register(AABB, object)
 def shadow_aabb(A, normal):
     if normal is e1:
         return A.xmin, A.xmax
@@ -36,7 +31,7 @@ def shadow_aabb(A, normal):
 GENERIC_DIRECTIONS = []
 
 
-@multifunction(object, object)
+@generic
 def normals(A, B):
     try:
         return A.normals() + B.normals()
@@ -44,21 +39,21 @@ def normals(A, B):
         return GENERIC_DIRECTIONS
 
 
-@normals.dispatch(Circle, Circle)
+@normals.register(Circle, Circle)
 def normals_circle(A, B):
     return [(B.pos - A.pos).normalized()]
 
 
-@normals.dispatch(AABB, AABB)
+@normals.register(AABB, AABB)
 def normals_aabb(A, B):
     return [e1, e2]
 
 
-@normals.dispatch(AABB, Circle)
+@normals.register(AABB, Circle)
 def normals_aabb_circle(A, B):
     # Encontra o vértice mais próximo do centro
     D = float('inf')
-    pt = Vec2(0, 0)
+    pt = Vec(0, 0)
     for v in A.vertices:
         delta = B.pos - v
         dnew = delta.norm()
@@ -96,7 +91,7 @@ def sat(A, B):
     >>> c1 = Circle(3, (0, 0))
     >>> c2 = Circle(3, (3, 4))
     >>> sat(c1, c2)
-    Vec2(0.6, 0.8)
+    Vec(0.6000000000000001, 0.8)
 
     Caso não haja superposição, a função retorna None
 
@@ -109,7 +104,7 @@ def sat(A, B):
     >>> box1 = AABB(4, 9, 1, 6)
     >>> box2 = AABB(0, 5, 0, 5)
     >>> sat(box1, box2)
-    Vec2(-1, 0)
+    Vec(-1.0, 0.0)
     '''
 
     nlist = normals(A, B)

@@ -1,10 +1,10 @@
-from smallvectors import Vec, VecArray, dot
+from math import sqrt, pi, sin
+from smallvectors import Vec, Rotation2d, dot
 from smallshapes import aabb_bbox
 from smallshapes.base import Mutable, Immutable, Shape, Solid, Convex 
-from math import sqrt, pi, sin
+
 
 Vec = Vec[2, float]
-
 __all__ = [
     'Path', 'mPath', 'PathAny',
     'Circuit', 'mCircuit', 'CircuitAny',
@@ -257,7 +257,7 @@ class RegularPolyAny(ConvexPolyAny):
 
     def __init__(self, N, length, theta=None, pos=None):
         alpha = pi / N
-        R = RotMat2(2 * alpha)
+        R = Rotation2d(2 * alpha)
         p = Vec(length / (2 * sin(alpha)), 0)
         vertices = []
         for _ in range(N):
@@ -486,9 +486,8 @@ def convex_hull(points):
     -------
 
     >>> hull = convex_hull([(0, 0), (1, 1), (1, 0), (0, 1), (0.5, 0.5)])
-    >>> print([tuple(v) for v in hull])
-    [(0, 0), (1, 0), (1, 1), (0, 1)]
-
+    >>> hull == [(0, 0), (1, 0), (1, 1), (0, 1)]
+    True
     '''
 
     # Ordena os pontos pela coordenada x, depois pela coordenada y

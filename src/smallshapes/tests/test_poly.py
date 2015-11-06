@@ -29,7 +29,6 @@ def test_poly_aabb():
 
     tri = Poly((0, 0), (4, 0), (0, 3))
     L = list(tri.aabb)
-    1/0
     assert L == [0, 4, 0, 3]
 
 if __name__ == '__main__':

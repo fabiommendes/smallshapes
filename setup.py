@@ -33,6 +33,7 @@ if 'PyPy' not in sys.version:
         from Cython.Build import cythonize
         from Cython.Distutils import build_ext
     except ImportError:
+        import warnings
         warnings.warn('Please install Cython to compile faster versions of FGAme modules')
     else:
         try:
@@ -68,5 +69,6 @@ setup(
     packages=setuptools.find_packages(PYSRC),
     license='GPL',
     install_requires=['smallvectors>=%s' % VERSION_BIG, 'six'],
-    **setup_kwds,
+    zip_safe=False,
+    **setup_kwds
 )
