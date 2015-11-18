@@ -12,7 +12,7 @@ def can_find_anytype():
 class Mixin:
     def assertAlmostEqual(self, a, b, msg=None, places=None, delta=None):
         try:
-            super().assertAlmostEqual(a, b, msg, places, delta)
+            super(Mixin, self).assertAlmostEqual(a, b, msg, places, delta)
         except TypeError:
             if hasattr(b, 'almost_equal'):
                 a, b = b, a
@@ -35,7 +35,7 @@ class Base:
     def setUp(self):
         self.mutable = self.mutable_cls(*self.args)
         self.immutable = self.immutable_cls(*self.args)
-        super().setUp()
+        super(Base, self).setUp()
             
     def test_construct_mutable(self):
         self.mutable_cls(*self.args)
@@ -105,7 +105,7 @@ class HasAABBBase:
         self.aabb_mexample = self.mutable_cls(*self.aabb_args)
         self.aabb_displaced= self.aabb_example.displaced(1, 1)
         self.aabb_mdisplaced = self.aabb_mexample.displaced(1, 1)
-        super().setUp()
+        super(HasAABBBase, self).setUp()
      
     def test_aabb_test(self):
         self.assertAlmostEqual(self.aabb_example.aabb, AABB(0, 1, 1, 2)) 

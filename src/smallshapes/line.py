@@ -118,8 +118,11 @@ class LineOrRayBase(Shape):
         yield self.tangent
         
     def __flatiter__(self):
-        yield from self.start
-        yield from self.tangent
+        # can't use `yield from` if we want to support Python 2
+        for x in self.start:
+            yield x
+        for x in self.tangent:
+            yield x
 
     def __len__(self):
         return 2

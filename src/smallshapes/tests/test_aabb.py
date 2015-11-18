@@ -3,7 +3,7 @@ from smallshapes import AABB, mAABB
 import unittest
 
 
-class AABBTest(LocatableBase, HasAABBBase):
+class AABBTest(LocatableBase, HasAABBBase, unittest.TestCase):
     mutable_cls = mAABB
     immutable_cls = AABB
     args = (0, 1, 0, 2)

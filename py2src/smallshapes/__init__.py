@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 '''
 ==================
 Geometrical shapes
@@ -20,8 +21,17 @@ types, (e.g.: check if to circles of given radius and positions intercept or
 not).
 '''
 
+from .base import *
 from .circle import *
 from .aabb import *
 from .line import *
 from .poly import *
 #from .SAT import *
+
+#
+# Late binding
+#
+Shape._circle = Circle
+Shape._mcircle = mCircle
+Shape._aabb = AABB
+Shape._maabb = mAABB

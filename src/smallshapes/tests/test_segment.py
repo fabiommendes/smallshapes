@@ -3,7 +3,7 @@ from smallshapes import Segment, mSegment
 import unittest
 
 
-class SegmentTest(LocatableBase, HasAABBBase):
+class SegmentTest(LocatableBase, HasAABBBase, unittest.TestCase):
     mutable_cls = mSegment
     immutable_cls = Segment
     args = ((0, 1), (1, 2))

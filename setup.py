@@ -54,7 +54,7 @@ setup(
     author='Fábio Macêdo Mendes',
     author_email='fabiomacedomendes@gmail.com',
     url='https://github.com/fabiommendes/smallshapes',
-    long_description=open(os.path.join(BASE, 'README.txt')).read(),
+    long_description=open(os.path.join(BASE, 'README.rst')).read(),
 
     classifiers=[
         'Development Status :: 3 - Alpha',

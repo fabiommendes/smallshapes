@@ -1,27 +1,44 @@
 # -*- coding: utf8 -*-
-
 from __future__ import division
 from math import pi, sqrt
-from smallvectors import dot, Vec, Point
-from smallshapes.base import Curve
+from smallvectors import dot, Vec
+from smallvectors.core import FlatView
+from smallshapes.base import Convex, Immutable, Mutable
 
 SQRT_HALF = 1 / sqrt(2)
 
+class CircleAny(Convex):
 
-class CircleBase(Curve):
+    '''Any class for Circle and mCircle classes'''
 
-    '''Base class for Circle and mCircle classes'''
-
-    __slots__ = ['_radius', '_x', '_y']
+    __slots__ = ('_radius', '_x', '_y')
 
     def __init__(self, radius, pos=(0, 0)):
         self._radius = radius
         self._x, self._y = pos
 
+    def __len__(self):
+        return 2
+    
+    def __iter__(self):
+        yield self._radius
+        yield Vec(self._x, self._y)
+
     def __repr__(self):
-        s_center = '%.1f, %.1f' % tuple(self.center)
-        tname = type(self).__name__
-        return '%s(%.1f, (%s))' % (tname, self._radius, s_center)
+        fmt = type(self).__name__, self.radius, tuple(self.pos)
+        return '%s(%s, pos=%s)' % fmt
+    
+    def displaced_by_vector_to(self, vec):
+        return type(self)(self.radius, vec)
+    
+    # Properties
+    @property
+    def radius(self):
+        return self._radius
+
+    @property
+    def pos(self):
+        return Vec(self._x, self._y)
 
     @property
     def x(self):
@@ -31,14 +48,56 @@ class CircleBase(Curve):
     def y(self):
         return self._y
 
+    # Boundary boxes
     @property
-    def pos(self):
-        return Vec(self._x, self._y)
+    def aabb(self):
+        r, x, y = self._radius, self._x, self._y
+        return self.__aabb_t__(x -r, x + r, y - r, y + r)
+    
+    @property
+    def xmin(self):
+        return self._x - self._radius
+    
+    @property
+    def xmax(self):
+        return self._x + self._radius
 
     @property
-    def center(self):
-        return Point(self._x, self._y)
+    def ymin(self):
+        return self._y - self._radius
+    
+    @property
+    def ymax(self):
+        return self._y + self._radius
+    
+    @property
+    def cbb(self):
+        return self.immutable()
+    
+    @property
+    def cbb_radius(self):
+        return self._radius
 
+    # Flat iterator
+    def __flatgetitem__(self, key):
+        if key == 0:
+            return self._radius
+        elif key == 1:
+            return self._x 
+        elif key == 2:
+            return self._y
+        else:
+            raise IndexError(key)
+
+    def __flatlen__(self):
+        return 3
+
+    def __flatiter__(self):
+        yield self._radius
+        yield self.x
+        yield self.y
+        
+    # Geometric properties
     def area(self):
         return pi * self._radius * self._radius
 
@@ -48,40 +107,24 @@ class CircleBase(Curve):
     def ROG(self):
         return self._radius * SQRT_HALF
 
-    # Métodos utilizado pelo SAT ##############################################
+    # SAT theorem
     def directions(self, n):
-        '''Retorna a lista de direções exaustivas para o teste do SAT
-        associadas ao objeto.
-
-        A rigor esta lista é infinita para um círculo. Retornamos uma lista
-        vazia de forma que somente as direções do outro objeto serão
-        consideradas'''
-
         return []
 
     def shadow(self, n):
-        '''Retorna as coordenadas da sombra na direção n dada.
-        Assume n normalizado.'''
-
-        p0 = dot(self._pos, n)
+        p0 = dot(self.pos, n)
         r = self._radius
         return (p0 - r, p0 + r)
 
-    # Cálculo de distâncias ###################################################
     def distance_center(self, other):
-        '''Retorna a distância entre centros de dois círculos.'''
-
         return self._pos.distance(other.pos)
 
     def distance_circle(self, other):
-        '''Retorna a distância para um outro círculo. Zero se eles se
-        interceptam'''
-
         distance = self._pos.distance(other.pos)
         sum_radius = self._radius + other.radius
         return max(distance - sum_radius, 0)
 
-    # Containement FGAme_tests ###############################################
+    # Containment functions
     def contains_circle(self, other):
         return (self.contains_point(other.pos) and
                 (self.distance_center(other) + other.radius < self._radius))
@@ -90,23 +133,29 @@ class CircleBase(Curve):
         return self._pos.distance(point) <= self._radius
 
 
-class Circle(CircleBase):
+class Circle(CircleAny, Immutable):
 
-    '''Representa um círculo imutável.'''
+    '''A circle of given radius and position `pos`''' 
 
-    __slots__ = []
-
-    @property
-    def radius(self):
-        return self._radius
+    __slots__ = ()
 
 
-class mCircle(CircleBase):
+class mCircle(CircleAny, Mutable):
 
     '''A mutable circle class'''
 
-    __slots__ = []
+    __slots__ = ()
 
+    def __flatsetitem__(self, key, value):
+        if key == 0:
+            self._radius = value
+        elif key == 1:
+            self._x = value 
+        elif key == 2:
+            self._y = value
+        else:
+            raise IndexError(key)
+            
     @Circle.radius.setter
     def radius(self, value):
         self._radius = float(value)
@@ -114,10 +163,3 @@ class mCircle(CircleBase):
     @Circle.pos.setter
     def pos(self, value):
         self._x, self._y = value
-
-# Late binding
-Curve._Circle = CircleBase
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()

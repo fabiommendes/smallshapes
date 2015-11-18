@@ -3,7 +3,7 @@ from smallshapes import Circle, mCircle
 import unittest
 
 
-class CircleTest(LocatableBase, HasAABBBase):
+class CircleTest(LocatableBase, HasAABBBase, unittest.TestCase):
     mutable_cls = mCircle
     immutable_cls = Circle
     args = (2.5, (0, 1))
