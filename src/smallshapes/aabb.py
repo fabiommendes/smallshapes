@@ -14,7 +14,7 @@ direction_y = Vec(0, 1)
 
 class AABBAny(Convex):
 
-    '''Classe pai para AABB e mAABB'''
+    """Classe pai para AABB e mAABB"""
 
     __slots__ = ('xmin', 'xmax', 'ymin', 'ymax')
 
@@ -60,6 +60,24 @@ class AABBAny(Convex):
         yield self.xmax
         yield self.ymin
         yield self.ymax
+
+    def __repr__(self):
+        data = '%.1f, %.1f, %.1f, %.1f' % self.bbox
+        return '%s([%s])' % (type(self).__name__, data)
+
+    def _eq(self, other):
+        xmin, xmax, ymin, ymax = other
+        return ((xmin == self.xmin) and (xmax == self.xmax)
+                and (ymin == self.ymin) and (ymax == self.ymax))
+
+    def __iter__(self):
+        yield self.xmin
+        yield self.xmax
+        yield self.ymin
+        yield self.ymax
+
+    def __len__(self):
+        return 4
 
     @property
     def bbox(self):
@@ -108,86 +126,64 @@ class AABBAny(Convex):
     def cbb(self):
         return Circle(self.cbb_radius, self.pos)
 
-    #
-    # Magic methods
-    #
-    def __repr__(self):
-        data = '%.1f, %.1f, %.1f, %.1f' % self.bbox
-        return '%s([%s])' % (type(self).__name__, data)
-
-    def _eq(self, other):
-        xmin, xmax, ymin, ymax = other
-        return ((xmin == self.xmin) and (xmax == self.xmax)
-                and (ymin == self.ymin) and (ymax == self.ymax))
-
-    def __richcmp__(self, other, method):
-        if method == 2:
-            return self._eq(other)
-        elif method == 3:
-            return not self._eq(other)
-        raise
-
-    def __iter__(self):
-        yield self.xmin
-        yield self.xmax
-        yield self.ymin
-        yield self.ymax
-
-    def __len__(self):
-        return 4
-
     def directions(self, n):
-        '''Retorna a lista de direções exaustivas para o teste do SAT
+        """Retorna a lista de direções exaustivas para o teste do SAT
         associadas ao objeto.
 
         A rigor esta lista é infinita para um círculo. Retornamos uma lista
         vazia de forma que somente as direções do outro objeto serão
-        consideradas'''
+        consideradas"""
 
         return [direction_x, direction_y]
 
     def shadow(self, n):
-        '''Retorna as coordenadas da sombra na direção n dada.
-        Assume n normalizado.'''
+        """Retorna as coordenadas da sombra na direção n dada.
+        Assume n normalizado."""
 
         points = [dot(n, p) for p in self.vertices]
         return min(points), max(points)
 
     def displaced_by_vector(self, vec):
         dx, dy = vec
-        return self._constructor(self.xmin + dx, self.xmax + dx,
-                                 self.ymin + dy, self.ymax + dy)
+        new = self.copy()
+        new.xmin += dx
+        new.xmax += dx
+        new.ymin += dy
+        new.ymax += dy
+        return new
         
     def displaced_by_vector_to(self, vec):
         return self.displaced_by_vector(self.pos - vec)
         
-
     def rescaled(self, scale):
-        '''Retorna um objeto modificado pelo fator de escala fornecido'''
+        """Retorna um objeto modificado pelo fator de escala fornecido"""
 
+        new = self.copy()
         x, y = self.pos
         dx, dy = self.shape
         dx *= scale / 2
         dy *= scale / 2
-        return self._constructor(x - dx, x + dx, y - dy, y + dy)
+        new.xmin, new.xmax = x - dx, x + dx
+        new.ymin, new.ymax = y - dy, y + dy
+        return new
 
     def distance_center(self, other):
-        '''Retorna a distância entre centros de duas AABBs.'''
+        """Retorna a distância entre centros de duas AABBs."""
 
         return (self.pos - other.pos).norm()
 
     def distance_aabb(self, other):
-        '''Retorna a distância para outra AABB. Zero se elas se interceptam'''
+        """Retorna a distância para outra AABB. Zero se elas se interceptam"""
 
     def intercepts_aabb(self, other):
-        '''Retorna True caso os dois objetos se interceptem'''
+        """Retorna True caso os dois objetos se interceptem"""
 
     def intercepts_point(self, point, tol=1e-6):
-        '''Retorna True se o ponto está na linha que forma a . a menos de
-        uma margem de tolerância tol.'''
+        """Retorna True se o ponto está na linha que forma a . a menos de
+        uma margem de tolerância tol."""
 
     def contains_aabb(self, other):
-        '''Retorna True se o argumento está contido na AABB.'''
+        """Retorna True se o argumento está contido na AABB."""
 
         cpoint = self.contains_point
         x, y, xm, ym = other
@@ -195,7 +191,7 @@ class AABBAny(Convex):
                 and cpoint(xm, y) and cpoint(xm, ym))
 
     def contains_circle(self, other):
-        '''Retorna True se o argumento está contido na AABB.'''
+        """Retorna True se o argumento está contido na AABB."""
 
         cpoint = self.contains_point
         x, y, xm, ym = other
@@ -203,7 +199,7 @@ class AABBAny(Convex):
                 and cpoint(xm, y) and cpoint(xm, ym))
 
     def contains_point(self, point):
-        '''Retorna True se o ponto está contido na AABB.'''
+        """Retorna True se o ponto está contido na AABB."""
 
         x, y = point
         return ((self.xmin <= x <= self.xmax)
@@ -218,7 +214,7 @@ class AABBAny(Convex):
 
 class AABB(AABBAny, Immutable):
 
-    '''Representa uma caixa de contorno retangular alinhada aos eixos.
+    """Representa uma caixa de contorno retangular alinhada aos eixos.
 
     Atributos
     ---------
@@ -258,14 +254,14 @@ class AABB(AABBAny, Immutable):
     True
     True
     True
-    '''
+    """
     
     __slots__ = ()
     
     
 class mAABB(AABBAny, Mutable):
 
-    '''Mutable version of AABB'''
+    """Mutable version of AABB"""
     
     __slots__ = ()
 
@@ -314,10 +310,10 @@ def aabb_bbox(xmin=None, xmax=None,
               ymin=None, ymax=None,
               bbox=None, rect=None,
               shape=None, pos=None):
-    '''
+    """
     Retorna a caixa de contorno (xmin, xmax, ymin, ymax) a partir dos
     parâmetros fornecidos.
-    '''
+    """
 
     if (xmin is not None) and (xmax is None):
         bbox = xmin
@@ -346,10 +342,10 @@ def aabb_rect(xmin=None, xmax=None,
               ymin=None, ymax=None,
               bbox=None, rect=None,
               shape=None, pos=None):
-    '''
+    """
     Retorna o rect  (xmin, ymin, width, height) a partir dos parâmetros
     fornecidos.
-    '''
+    """
 
     x, xmax, y, ymax = aabb_bbox(xmin, xmax, ymin, ymax,
                                  bbox, rect, shape, pos)
@@ -360,9 +356,9 @@ def aabb_pshape(xmin=None, xmax=None,
                 ymin=None, ymax=None,
                 bbox=None, rect=None,
                 shape=None, pos=None):
-    '''
+    """
     Retorna uma tupla de (centro, shape) a partir dos parâmetros fornecidos.
-    '''
+    """
     x, xmax, y, ymax = aabb_bbox(xmin, xmax, ymin, ymax,
                                  bbox, rect, shape, pos)
     center = Vec((x + xmax) / 2.0, (y + ymax) / 2.0)
@@ -374,9 +370,9 @@ def aabb_center(bbox=None, rect=None,
                 shape=None, pos=None,
                 xmin=None, xmax=None,
                 ymin=None, ymax=None):
-    '''
+    """
     Retorna um vetor com a posição do centro da caixa de contorno.
-    '''
+    """
 
     return aabb_pshape(xmin, ymin, xmax, ymax, bbox, rect, shape, pos)[0]
 
@@ -385,9 +381,9 @@ def aabb_shape(bbox=None, rect=None,
                shape=None, pos=None,
                xmin=None, xmax=None,
                ymin=None, ymax=None):
-    '''
+    """
     Retorna uma tupla (width, height) com o formato da caixa de contorno.
-    '''
+    """
 
     return aabb_shape(xmin, ymin, xmax, ymax, bbox, rect, shape, pos)[1]
 
