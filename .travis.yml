@@ -14,7 +14,7 @@ install:
 
 # run tests
 script:
-    - py.test src/smallvectors/tests/ --cov
+    - py.test src/smallshapes/tests/ --cov
 
 after_success:
     - coveralls
