@@ -62,6 +62,9 @@ setup(
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Operating System :: POSIX',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Software Development :: Libraries',
     ],
 
@@ -69,15 +72,14 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
     install_requires=[
-        'smallvectors',
+        'smallvectors>=0.6',
     ],
     extras_require={
         'dev': [
-            'boilerplate',
-            'mock',
             'invoke',
             'manuel',
             'pytest',
+            'python-boilerplate',
         ],
     },
 
