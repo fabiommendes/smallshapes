@@ -1,32 +1,31 @@
-#-*- coding: utf8 -*-
+# -*- coding: utf8 -*-
+#
+# This file were created by Python Boilerplate. Use boilerplate to start simple
+# usable and best-practices compliant Python projects.
+#
+# Learn more about it at: http://github.com/fabiommendes/python-boilerplate/
+#
+
 import os
+
 import sys
-import setuptools
-from setuptools import setup
+from setuptools import setup, find_packages
 
-#
-# Read VERSION from file and write it in the appropriate places
-#
-AUTHOR = 'Fábio Macêdo Mendes'
-BASE, _ = os.path.split(__file__)
-with open(os.path.join(BASE, 'VERSION')) as F:
-    VERSION = F.read().strip()
-path = os.path.join(BASE, 'src', 'smallshapes', 'meta.py')
-with open(path, 'w') as F:
-    F.write(
-        '# Auto-generated file. Please do not edit\n'
-        '__version__ = %r\n' % VERSION +
-        '__author__ = %r\n' % AUTHOR)
-VERSION_BIG = VERSION.rpartition('.')[0]
 
-#
-# Choose the default Python3 branch or the code converted by 3to2
-#
-PYSRC = 'src' if sys.version.startswith('3') else 'py2src'
+# Meta information
+name = 'smallshapes'
+project = 'smallshapes'
+author = 'Fábio Macêdo Mendes'
+version = open('VERSION').read().strip()
+dirname = os.path.dirname(__file__)
 
-#
-# Cython stuff (for the future)
-#
+
+# Save version and author to __meta__.py
+with open(os.path.join(dirname, 'src', project, '__meta__.py'), 'w') as F:
+    F.write('__version__ = %r\n__author__ = %r\n' % (version, author))
+
+
+# Cython support
 setup_kwds = {}
 if 'PyPy' not in sys.version:
     try:
@@ -34,7 +33,8 @@ if 'PyPy' not in sys.version:
         from Cython.Distutils import build_ext
     except ImportError:
         import warnings
-        warnings.warn('Please install Cython to compile faster versions of FGAme modules')
+        warnings.warn('Please install Cython to compile faster versions of '
+                      'smallshapes modules')
     else:
         try:
             setup_kwds.update(
@@ -43,19 +43,19 @@ if 'PyPy' not in sys.version:
         except ValueError:
             pass
 
-#
-# Main configuration script
-#
+
 setup(
-    name='smallshapes',
-    version=VERSION,
+    # Basic info
+    name=name,
+    version=version,
+    author=author,
+    author_email='fabiomacedomendes@gmail.com',
+    url='',
     description='A simple engine that implements mathematical shapes of '
                 'small dimensionality',
-    author='Fábio Macêdo Mendes',
-    author_email='fabiomacedomendes@gmail.com',
-    url='https://github.com/fabiommendes/smallshapes',
-    long_description=open(os.path.join(BASE, 'README.rst')).read(),
+    long_description=open('README.rst').read(),
 
+    # Classifiers (see https://pypi.python.org/pypi?%3Aaction=list_classifiers)
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
@@ -65,10 +65,23 @@ setup(
         'Topic :: Software Development :: Libraries',
     ],
 
-    package_dir={'': PYSRC},
-    packages=setuptools.find_packages(PYSRC),
-    license='GPL',
-    install_requires=['smallvectors>=%s' % VERSION_BIG, 'six'],
+    # Packages and depencies
+    package_dir={'': 'src'},
+    packages=find_packages('src'),
+    install_requires=[
+        'smallvectors',
+    ],
+    extras_require={
+        'dev': [
+            'boilerplate',
+            'mock',
+            'invoke',
+            'manuel',
+            'pytest',
+        ],
+    },
+
+    # Other configurations
     zip_safe=False,
-    **setup_kwds
+    platforms='any',
 )

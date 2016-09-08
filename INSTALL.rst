@@ -1,33 +1,30 @@
-Dependencies
-============
+=========================
+Installation instructions
+=========================
 
-`smallshapes` can run in many Python implementations including CPython and 
-PyPy. In CPython it can be installed as a (slow) pure-python version or it
-can use compiled extensions to speed-up things in C. This is done using Cython 
-and it is highly recommended that a C compiler and Python development headers 
-are installed prior to building the `smallshapes` library. The speed-ups can 
-be dramatic.
+smallshapes can be installed using pip::
 
-The library depends heavily on the `smalvectors` package available at PyPI.
-
-
-Installation commands
-=====================
-
-If you downloaded a compressed package, simply unpack it and execute the 
-regular Python install::
-
-    $ python setup.py build
-    $ sudo python setup.py install
-
-This package is also available at PyPI and hence can be installed using `pip`::
-
-    $ sudo pip install smallshapes
-    
-This is the recommended way since it automatically install all dependencies.
-    
-In Windows the command would be something like this (adapt for the correct 
-Python installation path)::
-
-    $ cd c:\python34
     $ python -m pip install smallshapes
+
+This command will fetch the archive and its dependencies from the internet and
+install them. You may need to pick either ``python2``` or ``python3`` in
+order to select the correct python version.
+
+If you've downloaded the tarball, unpack it, and execute::
+
+    $ python setup.py install
+
+In either case, it is possible to perform local user installs by appending the
+``--user`` option.
+
+
+Troubleshoot
+------------
+
+Windows users may find that these command will only works if typed from Python's
+installation directory.
+
+Some Linux distributions (e.g. Ubuntu) install Python without installing pip.
+Please install it before. If you don't have root privileges, download the
+get-pip.py script at https://bootstrap.pypa.io/get-pip.py and execute it as
+``python get-pip.py --user``.

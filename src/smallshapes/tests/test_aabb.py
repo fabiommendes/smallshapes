@@ -1,18 +1,9 @@
-from smallshapes.tests.test_base import LocatableBase, HasAABBBase
+from smallshapes.tests import abstract as base
 from smallshapes import AABB, mAABB
-import unittest
 
 
-class AABBTest(LocatableBase, HasAABBBase, unittest.TestCase):
+class TestAABB(base.TestMutability, base.TestSolid):
+    base_cls = AABB
     mutable_cls = mAABB
-    immutable_cls = AABB
-    args = (0, 1, 0, 2)
+    base_args = (0, 1, 0, 2)
     aabb_args = (0, 1, 1, 2)
-
-
-del HasAABBBase, LocatableBase
-
-            
-if __name__ == '__main__':
-    unittest.main()
-    

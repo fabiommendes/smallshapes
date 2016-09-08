@@ -41,7 +41,7 @@ def normals(A, B):
 
 @normals.register(Circle, Circle)
 def normals_circle(A, B):
-    return [(B.pos - A.pos).normalized()]
+    return [(B.pos - A.pos).normalize()]
 
 
 @normals.register(AABB, AABB)
@@ -61,7 +61,7 @@ def normals_aabb_circle(A, B):
             D = dnew
             pt = delta
 
-    return [pt.normalized(), e1, e2]
+    return [pt.normalize(), e1, e2]
 
 
 # ...
@@ -120,7 +120,7 @@ def sat(A, B):
             D = S
             if (a1 + a2) > (b1 + b2):
                 n *= -1
-            d = n.normalized()
+            d = n.normalize()
     return d * D
 
 

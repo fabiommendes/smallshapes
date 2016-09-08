@@ -1,18 +1,9 @@
-from smallshapes.tests.test_base import LocatableBase, HasAABBBase
-from smallshapes import Segment, mSegment
-import unittest
+from smallshapes.tests import abstract as base
+from smallshapes.segment import Segment, mSegment
 
 
-class SegmentTest(LocatableBase, HasAABBBase, unittest.TestCase):
+class TestSegment(base.TestMutability, base.TestShape):
+    base_cls = Segment
     mutable_cls = mSegment
-    immutable_cls = Segment
-    args = ((0, 1), (1, 2))
-    aabb_args = ((0, 1), (1, 2))     
-     
-     
-del HasAABBBase, LocatableBase
-
-            
-if __name__ == '__main__':
-    unittest.main()
-    
+    base_args = (0, 1), (1, 2)
+    aabb_args = (0, 1), (1, 2)

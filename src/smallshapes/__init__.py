@@ -1,36 +1,36 @@
-'''
-==================
-Geometrical shapes
-==================
+from .__meta__ import __author__, __version__
+from .core import *
+from .aabb import AABBAny, AABB, mAABB
+from .aabb import aabb_coords, aabb_center, aabb_pshape, aabb_rect, aabb_shape
+from .circle import CircleAny, Circle, mCircle
+from .segment import SegmentAny, Segment, mSegment
+from .path_utils import area, center_of_mass, ROG_sqr, clip, convex_hull
+from .path import PathAny, Path, mPath
+from .circuit import CircuitAny, Circuit, mCircuit
+from .poly import PolyAny, Poly, mPoly
+from .poly_convex import ConvexPolyAny, ConvexPoly, mConvexPoly
+from .poly_regular import RegularPolyAny, RegularPoly, mRegularPoly
+from .poly_rectangle import RectangleAny, Rectangle, mRectangle
+from .poly_triangle import TriangleAny, Triangle, mTriangle
 
-The mathshapes.shape module define classes for various geometric primitives
-such as points, lines, circles, polygons, etc. All these objects define some
-common mathematical operations such as containment and distance FGAme_tests,
-projections, and superposition calculations via SAT.
-
-
-Mutable vs immutable
-====================
-
-Most objects have both an immutable and a mutable implementation with a
-similar API. Mutable objects should be used when the geometric object
-represents some fixed identity (e.g., a circle in a scene that can move and
-change is geometric properties). All other sittuations should use immutable
-types, (e.g.: check if to circles of given radius and positions intercept or
-not).
-'''
-
-from .base import *
-from .circle import *
-from .aabb import *
-from .line import *
-from .poly import *
-#from .SAT import *
-
-#
 # Late binding
-#
-Shape._circle = Circle
-Shape._mcircle = mCircle
-Shape._aabb = AABB
-Shape._maabb = mAABB
+MathFunctionsMixin._circle = Circle
+MathFunctionsMixin._mcircle = mCircle
+MathFunctionsMixin._aabb = AABB
+MathFunctionsMixin._maabb = mAABB
+MathFunctionsMixin._segment = Segment
+MathFunctionsMixin._msegment = mSegment
+MathFunctionsMixin._path = Path
+MathFunctionsMixin._mpath = mPath
+MathFunctionsMixin._circuit = Circuit
+MathFunctionsMixin._mcircuit = mCircuit
+MathFunctionsMixin._poly = Poly
+MathFunctionsMixin._mpoly = mPoly
+MathFunctionsMixin._convexpoly = ConvexPoly
+MathFunctionsMixin._mconvexpoly = mConvexPoly
+MathFunctionsMixin._regularpoly = RegularPoly
+MathFunctionsMixin._mregularpoly = mRegularPoly
+MathFunctionsMixin._rectangle = Rectangle
+MathFunctionsMixin._mrectangle = mRectangle
+MathFunctionsMixin._triangle = Triangle
+MathFunctionsMixin._mtriangle = mTriangle
