@@ -4,7 +4,6 @@ from smallshapes import Rectangle, mRectangle
 
 class TestRectangle(base.TestPolyConvex):
     base_cls = Rectangle
-    mutable_cls = mRectangle
     base_args = 0, 2, 0, 1
 
     def test_immutable_serialize_to_args(self):

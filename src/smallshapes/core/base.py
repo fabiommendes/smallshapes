@@ -1,4 +1,5 @@
-from smallvectors import Flatable, MathFunctionsMixin as _MathFunctionsMixin, Object
+from smallvectors import Flatable, MathFunctionsMixin as _MathFunctionsMixin, \
+    Object
 from smallvectors.core.mutability import Mutable, Immutable
 from smallvectors.core.sequentiable import Sequentiable
 
@@ -9,7 +10,21 @@ class MathFunctionsMixin(_MathFunctionsMixin):
     _circle = _mcircle = _aabb = _maabb = NotImplemented
 
 
-class SmallshapesBase(Flatable, Sequentiable, MathFunctionsMixin, Object):
+# Maybe in the future Smallshapes will implement parametrized shapes and the
+# __origin__, __parameters__, etc attributes will be useful. For now, we use
+# values that make them work nicely with the abstract classes in smallvectors
+class SmallshapesMeta(type(Sequentiable)):
+    @property
+    def __origin__(self):
+        return self
+
+    @property
+    def __parameters__(self):
+        return None
+
+
+class SmallshapesBase(Flatable, Sequentiable, MathFunctionsMixin, Object,
+                      metaclass=SmallshapesMeta):
     """
     Base class for all geometric objects in the smallshapes package.
     """
@@ -48,5 +63,3 @@ class SmallshapesBase(Flatable, Sequentiable, MathFunctionsMixin, Object):
 
     def __setitem_simple__(self, key, value):
         raise NotImplementedError
-
-

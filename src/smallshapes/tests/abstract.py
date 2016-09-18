@@ -2,6 +2,7 @@ from numbers import Number
 
 import pytest
 
+import smallvectors.tests.base
 from smallshapes import Circle, CircleAny
 from smallvectors import simeq, Vec
 from smallvectors.tests import abstract as base
@@ -32,7 +33,7 @@ class TestBase(base.TestMutability,
         return [mutable, immutable]
 
 
-class TestLocatable(base.TestClass):
+class TestLocatable(smallvectors.tests.base.ClassTester):
     @pytest.fixture
     def examples(self, obj):
         return [obj]
@@ -59,11 +60,10 @@ class TestLocatable(base.TestClass):
         newpos = obj.pos + (10, 5)
         assert simeq(new.pos, newpos)
 
-    def test_inplace_displacement_using_pos(self, args):
-        obj = self.mutable_cls(*args)
-        newpos = obj.pos + (10, 5)
-        obj.pos = newpos
-        assert simeq(obj.pos, newpos)
+    def test_inplace_displacement_using_pos(self, mutable):
+        newpos = mutable.pos + (10, 5)
+        mutable.pos += (10, 5)
+        assert simeq(mutable.pos, newpos)
 
 
 class TestShape(TestLocatable):
@@ -93,13 +93,6 @@ class TestSolid(TestShape):
         assert abs(obj.ROG_sqr() - obj.ROG() ** 2) < tol
 
 
-        # def setUp(self):
-        #     self.aabb_example = self.immutable_cls(*self.aabb_args)
-        #     self.aabb_mexample = self.mutable_cls(*self.aabb_args)
-        #     self.aabb_displaced = self.aabb_example.move(1, 1)
-        #     self.aabb_mdisplaced = self.aabb_mexample.move(1, 1)
-        #     super(TestHasAABB, self).setUp()
-        #
         # def test_aabb_test(self):
         #     assert simeq(self.aabb_example.aabb, AABB(0, 1, 1, 2))
         #     assert simeq(self.aabb_mexample.aabb, AABB(0, 1, 1, 2))

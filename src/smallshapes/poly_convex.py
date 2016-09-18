@@ -1,4 +1,4 @@
-from smallshapes import PolyAny, Convex
+from smallshapes import PolyAny, Convex, mPoly, mConvex
 from smallvectors import Immutable
 from smallvectors.core.mutability import Mutable
 
@@ -22,7 +22,7 @@ class ConvexPoly(ConvexPolyAny, Immutable):
     __slots__ = ()
 
 
-class mConvexPoly(ConvexPolyAny, Mutable):
+class mConvexPoly(ConvexPolyAny, mPoly, mConvex):
     """
     A mutable convex polygon.
     """

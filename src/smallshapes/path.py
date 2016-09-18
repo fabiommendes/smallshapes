@@ -157,11 +157,7 @@ class mPath(PathAny, mShape):
 
     @PathAny.pos.setter
     def pos(self, value):
-        data = self._data
-        dx, dy = value - self.pos
-        for i in range(0, len(self._data), 2):
-            data[i] += dx
-            data[i + 1] += dy
+        self.imove_to_vec(value)
 
     def imove_vec(self, vec):
         x, y = vec
@@ -169,4 +165,8 @@ class mPath(PathAny, mShape):
         self._data[1::2] = [y + yi for yi in self._data[1::2]]
 
     def imove_to_vec(self, vec):
-        super().imove_to_vec(vec)
+        data = self._data
+        dx, dy = vec - self.pos
+        for i in range(0, len(self._data), 2):
+            data[i] += dx
+            data[i + 1] += dy

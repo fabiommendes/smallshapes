@@ -67,7 +67,7 @@ class AABBAny(Convex):
             self.xmin, self.xmax, self.ymin, self.ymax = args
         else:
             self.xmin, self.xmax, self.ymin, self.ymax = aabb_coords(
-                xmin, xmax, ymin, ymax, bbox, rect, shape, pos
+                xmin, xmax, ymin, ymax, rect, shape, pos
             )
 
     def __flatgetitem__(self, key):
@@ -146,6 +146,11 @@ class AABBAny(Convex):
         new.ymin, new.ymax = y - dy, y + dy
         return new
 
+    def contains_point(self, point):
+        x, y = point
+        return ((self.xmin <= x <= self.xmax)
+                and (self.ymin <= y <= self.ymax))
+
     def contains_aabb(self, other):
         return (
             self.xmin <= other.xmin and self.ymin <= other.ymin and
@@ -157,11 +162,6 @@ class AABBAny(Convex):
         x, y, xm, ym = other
         return (cpoint(x, y) and cpoint(x, ym)
                 and cpoint(xm, y) and cpoint(xm, ym))
-
-    def contains_point(self, point):
-        x, y = point
-        return ((self.xmin <= x <= self.xmax)
-                and (self.ymin <= y <= self.ymax))
 
     def shadow_x(self):
         return (self.xmin, self.xmax)
@@ -269,46 +269,46 @@ def aabb_coords(xmin=None, xmax=None, ymin=None, ymax=None,
 
 
 def aabb_rect(xmin=None, xmax=None, ymin=None, ymax=None,
-              bbox=None, rect=None, shape=None, pos=None):
+              rect=None, shape=None, pos=None):
     """
     Return AABB's (xmin, ymin, width, height) from given parameters.
     """
 
     x, xmax, y, ymax = aabb_coords(xmin, xmax, ymin, ymax,
-                                   bbox, rect, shape, pos)
+                                   rect, shape, pos)
     return x, y, xmax - x, ymax - y
 
 
 def aabb_pshape(xmin=None, xmax=None, ymin=None, ymax=None,
-                bbox=None, rect=None, shape=None, pos=None):
+                rect=None, shape=None, pos=None):
     """
     Return AABB's (pos, shape) from given parameters.
     """
 
     x, xmax, y, ymax = aabb_coords(xmin, xmax, ymin, ymax,
-                                   bbox, rect, shape, pos)
+                                   rect, shape, pos)
     center = Vec((x + xmax) / 2.0, (y + ymax) / 2.0)
     shape = (xmax - x, ymax - y)
     return center, shape
 
 
-def aabb_center(bbox=None, rect=None, shape=None, pos=None,
-                xmin=None, xmax=None, ymin=None, ymax=None):
+def aabb_center(xmin=None, xmax=None, ymin=None, ymax=None,
+                rect=None, shape=None, pos=None):
     """
     Return AABB's center position vector from given parameters.
     """
 
-    xmin, xmax, ymin, ymax = aabb_coords(xmin, ymin, xmax, ymax, bbox, rect,
-                                         shape, pos)
+    xmin, xmax, ymin, ymax = aabb_coords(xmin, ymin, xmax, ymax,
+                                         rect, shape, pos)
     return Vec((xmin + xmax) / 2, (ymin + ymax) / 2)
 
 
-def aabb_shape(bbox=None, rect=None, shape=None, pos=None,
-               xmin=None, xmax=None, ymin=None, ymax=None):
+def aabb_shape(xmin=None, xmax=None, ymin=None, ymax=None,
+               rect=None, shape=None, pos=None):
     """
     Return AABB's (width, height) vector from given parameters.
     """
 
-    xmin, xmax, ymin, ymax = aabb_coords(xmin, ymin, xmax, ymax, bbox, rect,
+    xmin, xmax, ymin, ymax = aabb_coords(xmin, ymin, xmax, ymax, rect,
                                          shape, pos)
     return xmax - xmin, ymax - ymin

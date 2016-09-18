@@ -4,6 +4,5 @@ from smallshapes import Path, mPath
 
 class TestPath(base.TestMutability, base.TestShape):
     base_cls = Path
-    mutable_cls = mPath
     base_args = (0, 0), (1, 1), (2, 0)
 

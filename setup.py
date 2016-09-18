@@ -21,8 +21,10 @@ dirname = os.path.dirname(__file__)
 
 
 # Save version and author to __meta__.py
-with open(os.path.join(dirname, 'src', project, '__meta__.py'), 'w') as F:
-    F.write('__version__ = %r\n__author__ = %r\n' % (version, author))
+file_name = os.path.join(dirname, 'src', project, '__meta__.py')
+with open(file_name, 'w', encoding='utf-8') as F:
+    F.write('__version__ = %r\n'
+            '__author__ = %r\n' % (version, author))
 
 
 # Cython support
@@ -79,7 +81,7 @@ setup(
             'invoke',
             'manuel',
             'pytest',
-            'python-boilerplate',
+            'python-boilerplate>=0.4.5',
         ],
     },
 

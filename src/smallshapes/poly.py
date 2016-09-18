@@ -1,4 +1,5 @@
-from smallshapes import Solid, CircuitAny, Circuit, mCircuit, ROG_sqr, area
+from smallshapes import Solid, CircuitAny, Circuit, mCircuit, ROG_sqr, area, \
+    mSolid
 from smallvectors import Vec
 
 Vec = Vec[2, float]
@@ -31,7 +32,7 @@ class Poly(PolyAny, Circuit):
     __slots__ = ()
 
 
-class mPoly(PolyAny, mCircuit):
+class mPoly(PolyAny, mCircuit, mSolid):
     """
     A mutable simple polygon.
     """

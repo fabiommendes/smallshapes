@@ -4,7 +4,6 @@ from smallshapes import Circle, mCircle
 
 class TestCircle(base.TestMutability, base.TestSolid):
     base_cls = Circle
-    mutable_cls = mCircle
     base_args = (2.5, (0, 1))
     aabb_args = (0.5, (0.5, 1.5))
 

@@ -50,6 +50,8 @@ def center_of_mass(L):
     N = len(L)
     x_cm = 0
     y_cm = 0
+    if A == 0:
+        return Vec(*L[0])
     for i in range(N):
         x1, y1 = L[(i + 1) % N]
         x0, y0 = L[i]
